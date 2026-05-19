@@ -1,0 +1,355 @@
+# Day 2 — Python for AI Setup 🛠️
+
+## Topics Covered
+- The AI Python Stack
+- Jupyter Notebook
+- NumPy Basics
+- Pandas Basics
+- Matplotlib Basics
+
+---
+
+## 1. The AI Python Stack
+
+| Library | Role | Analogy |
+|---|---|---|
+| `numpy` | Number crunching, matrices | Finance department |
+| `pandas` | Loading, cleaning, exploring data | HR/Data team |
+| `matplotlib` | Visualizing data as charts | Design team |
+| `scikit-learn` | Building ML models | Engineering team |
+| `jupyter` | Interactive coding workspace | Office/Workspace |
+
+### Installation
+```bash
+pip install numpy pandas matplotlib scikit-learn jupyter notebook
+```
+
+### Launch Jupyter
+```bash
+jupyter notebook
+```
+
+### Test Installation
+```python
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LogisticRegression
+
+print("numpy version:", np.__version__)
+print("pandas version:", pd.__version__)
+print("✅ All libraries loaded! You're ready for AI.")
+```
+
+---
+
+## 2. NumPy
+
+### Why NumPy over Python lists?
+- Python lists need loops for operations
+- NumPy operates on ALL elements simultaneously
+- Handles millions of numbers efficiently
+
+### Key Concepts
+
+```python
+import numpy as np
+
+# 1D Array
+scores = np.array([45, 23, 67, 12, 89, 34, 56, 78, 9, 43, 21])
+print("All scores:", scores)
+print("Scores + 10 bonus:", scores + 10)
+print("Average:", np.mean(scores))
+print("Highest:", np.max(scores))
+print("Lowest:", np.min(scores))
+
+# 2D Array — rows and columns
+marks = np.array([
+    [85, 90, 78],   # Student 1
+    [67, 45, 89],   # Student 2
+    [92, 88, 76]    # Student 3
+])
+
+print("Shape:", marks.shape)         # (3, 3)
+print("Student 1 marks:", marks[0])  # First row
+print("All Math marks:", marks[:, 0]) # First column
+
+# Real world example — Swiggy customers
+# [age, orders_per_month, avg_order_value]
+customers = np.array([
+    [25, 8,  350],
+    [32, 3,  800],
+    [19, 15, 150],
+    [45, 2,  1200],
+    [28, 10, 420]
+])
+
+print("Dataset shape:", customers.shape)       # (5, 3)
+print("Number of customers:", customers.shape[0])
+print("Number of features:", customers.shape[1])
+print("Average age:", np.mean(customers[:, 0]))
+```
+
+### Key Rule
+```
+Rows    = individual data points (one customer, one image, one email)
+Columns = features (age, price, pixel value)
+```
+
+---
+
+## 3. Pandas
+
+### Core Structures
+- **Series** — one column (single Excel column)
+- **DataFrame** — full table (rows + columns like Excel sheet)
+
+### Creating a DataFrame
+```python
+import pandas as pd
+
+data = {
+    'Name':   ['Rahul', 'Priya', 'Kiran', 'Ananya', 'Ravi'],
+    'Age':    [25, 32, 19, 45, 28],
+    'City':   ['Hyderabad', 'Mumbai', 'Bangalore', 'Chennai', 'Hyderabad'],
+    'Orders': [8, 3, 15, 2, 10],
+    'Spent':  [2400, 8000, 1500, 12000, 4200]
+}
+df = pd.DataFrame(data)
+```
+
+### Daily Morning Checklist — New Dataset
+```python
+df.head()           # First 5 rows
+df.tail(3)          # Last 3 rows
+df.shape            # (rows, columns)
+df.columns          # Column names
+df.dtypes           # Data types
+df.describe()       # Stats — mean, min, max, std
+df.isnull().sum()   # Missing values per column
+df.info()           # Full summary
+```
+
+### Selecting Data
+```python
+# Single column → Series
+df['Name']
+
+# Multiple columns → DataFrame
+df[['Name', 'City', 'Spent']]
+
+# By position (iloc)
+df.iloc[0]          # First row
+df.iloc[0:3]        # First 3 rows
+df.iloc[1, 3]       # Row 1, Column 3
+
+# By label (loc)
+df.loc[0]           # Row with index 0
+df.loc[0, 'Name']   # Row 0, column Name
+```
+
+> **iloc = by position number | loc = by label name**
+
+### Filtering Rows
+```python
+# Single condition
+df[df['City'] == 'Hyderabad']
+df[df['Age'] > 25]
+df[df['Spent'] > 5000]
+
+# Multiple conditions
+df[(df['City'] == 'Hyderabad') & (df['Age'] > 20)]   # AND
+df[(df['Spent'] > 5000) | (df['Orders'] > 10)]        # OR
+
+# NOT condition
+df[df['City'] != 'Mumbai']
+
+# Filter + select columns
+df[df['Age'] > 25][['Name', 'Spent']]
+```
+
+### Adding & Modifying Columns
+```python
+# Calculated column
+df['Avg_per_order'] = df['Spent'] / df['Orders']
+
+# Condition-based column (lambda)
+df['Customer_type'] = df['Spent'].apply(
+    lambda x: 'Premium' if x > 5000 else 'Regular'
+)
+
+# Note: variable inside lambda can be named anything
+# lambda x, lambda val, lambda score — all identical
+```
+
+### GroupBy — Most Powerful Operation
+```python
+# Average spent per city
+df.groupby('City')['Spent'].mean()
+
+# Total orders per city
+df.groupby('City')['Orders'].sum()
+
+# Multiple aggregations
+df.groupby('City').agg({
+    'Spent':  'mean',
+    'Orders': 'sum',
+    'Name':   'count'
+})
+
+# Sort results
+df.groupby('City')['Spent'].mean().sort_values(ascending=False)
+```
+
+> **Pattern:** `df.groupby('category')['value'].operation()`
+> **Important:** groupby uses **parentheses** not square brackets!
+
+### Handling Missing Values
+```python
+import numpy as np
+
+data = {
+    'Name':  ['Rahul', 'Priya', 'Kiran', 'Ananya', 'Ravi'],
+    'Age':   [25, None, 19, 45, None],
+    'Spent': [2400, 8000, None, 12000, 4200]
+}
+df2 = pd.DataFrame(data)
+
+# Check missing values
+df2.isnull().sum()
+
+# Drop rows with missing values
+df2.dropna()
+
+# Fill with mean
+df2['Age'] = df2['Age'].fillna(df2['Age'].mean())
+
+# Fill with 0
+df2['Spent'] = df2['Spent'].fillna(0)
+
+# Always save back with = or use inplace=True
+df2['Age'].fillna(df2['Age'].mean(), inplace=True)
+```
+
+| Situation | Use |
+|---|---|
+| Very few missing rows (<5%) | `dropna()` |
+| Many missing rows | `fillna()` |
+| Numerical columns | Fill with mean/median |
+| Too many missing (>50% of column) | Drop the entire column |
+
+### Sorting
+```python
+df.sort_values('Spent', ascending=False)          # Highest first
+df.sort_values('Age', ascending=True)             # Lowest first
+df.sort_values('Spent', ascending=False).head(3)  # Top 3
+```
+
+### Quick Stats
+```python
+df['Spent'].mean()         # Average
+df['Spent'].sum()          # Total
+df['Spent'].max()          # Maximum
+df['Spent'].min()          # Minimum
+df['Spent'].median()       # Median
+df['City'].value_counts()  # Count per category
+df['City'].nunique()       # Number of unique values
+```
+
+---
+
+## 4. Matplotlib
+
+### 3 Charts You'll Use 90% of the Time
+```python
+import matplotlib.pyplot as plt
+
+# Bar chart — comparing categories
+plt.figure(figsize=(8, 4))
+plt.bar(df['Name'], df['Spent'], color='steelblue')
+plt.title('Amount Spent per Customer')
+plt.xlabel('Customer')
+plt.ylabel('Amount Spent (₹)')
+plt.show()
+
+# Line chart — trends over time
+months = ['Jan', 'Feb', 'Mar', 'Apr', 'May']
+orders = [120, 135, 98, 167, 189]
+
+plt.figure(figsize=(8, 4))
+plt.plot(months, orders, marker='o', color='green')
+plt.title('Orders per Month')
+plt.xlabel('Month')
+plt.ylabel('Orders')
+plt.show()
+
+# Histogram — distribution of values
+plt.figure(figsize=(8, 4))
+plt.hist(df['Age'], bins=5, color='orange')
+plt.title('Age Distribution')
+plt.xlabel('Age')
+plt.ylabel('Count')
+plt.show()
+```
+
+---
+
+## 5. Key Pandas Pipeline
+
+```python
+df.head()                                    # look
+df.isnull().sum()                            # check missing
+df['col'] = df['col'].fillna(df['col'].mean()) # clean
+df[df['col'] > value]                        # filter
+df.groupby('col')['val'].mean()              # analyze
+```
+
+---
+
+## 6. Critical Jupyter Rule
+
+> **Variables stay in memory across cells.**
+> If you ran `df = df[['col1', 'col2']]` in a previous cell,
+> that damaged `df` stays in memory even if you delete the cell.
+>
+> **Fix:** Always reload data at the top, or go to **Kernel → Restart & Run All**
+
+---
+
+## Common Mistakes to Avoid
+
+```python
+# ❌ WRONG — drops columns you might need later
+df = df[['col1', 'col2']]
+X = df[['col1', 'col2', 'col3']]  # col3 doesn't exist now!
+
+# ✅ RIGHT — select features only when creating X
+df['col'].fillna(df['col'].mean(), inplace=True)
+X = df[['col1', 'col2', 'col3']]  # all columns still available
+
+# ❌ WRONG — groupby with square brackets
+df.groupby['City']['Spent'].mean()
+
+# ✅ RIGHT — groupby with parentheses
+df.groupby('City')['Spent'].mean()
+```
+
+---
+
+## Interview Tips — Day 2
+
+**Q: What are the first 5 things you do on a new dataset?**
+1. `df.head()` and `df.shape` — understand size and structure
+2. `df.dtypes` — check correct data types
+3. `df.isnull().sum()` — find missing values
+4. `df.describe()` — statistical summary, spot outliers
+5. `df.value_counts()` — understand category distributions
+
+**Q: dropna() vs fillna()?**
+- `dropna()` — when missing rows are very few (<5%), won't affect analysis
+- `fillna()` — when you can't afford to lose rows
+- Numerical → fill with mean/median
+- Categorical → fill with most frequent value
+- Always explain **when and why**, not just **what**
+
+---
