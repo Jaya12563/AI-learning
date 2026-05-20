@@ -1,0 +1,370 @@
+# Day 3 — First Real ML Model 🤖
+
+## Topics Covered
+- What is Scikit-learn
+- The Universal ML Pipeline
+- Train/Test Split
+- Features (X) and Labels (y)
+- Decision Tree Classifier
+- Model Evaluation
+- Feature Importance
+- Common Errors & Fixes
+
+---
+
+## 1. What is Scikit-learn?
+
+Scikit-learn is a Python library with pre-built ML algorithms ready to use.
+You don't build the math from scratch — you just:
+
+```
+1. Pick an algorithm
+2. Feed it data
+3. It learns
+4. You predict
+```
+
+> **Analogy:** Like a microwave — you don't build it from scratch.
+> You put food in, press a button, it cooks.
+> Scikit-learn is the microwave. Your data is the food.
+
+---
+
+## 2. The Universal ML Pipeline
+
+Every single ML project follows these 5 steps. No exceptions.
+
+```
+Step 1: Load & Explore data        → Pandas
+Step 2: Clean & Prepare data       → Pandas
+Step 3: Split into Train/Test      → Scikit-learn
+Step 4: Train the model            → Scikit-learn
+Step 5: Evaluate the model         → Scikit-learn
+```
+
+---
+
+## 3. Train/Test Split
+
+### The Concept
+- **80% → Training set** — model learns from this
+- **20% → Testing set** — model is evaluated on this
+- Model **NEVER sees test data during training**
+- Testing on same data you trained on = overfitting = meaningless results
+
+### The Exam Analogy
+```
+Study phase  → model sees X_train + y_train (questions + answers)
+Exam phase   → model sees only X_test (new questions, no answers)
+Checking     → we compare y_pred vs y_test (did it get them right?)
+```
+
+### The 4 Variables Explained
+
+| Variable | What it is | Analogy |
+|---|---|---|
+| `X_train` | Features of training data | Question papers to study from |
+| `y_train` | Labels of training data | Answer key for study questions |
+| `X_test` | Features of test data | Exam paper (unseen questions) |
+| `y_test` | Labels of test data | Real answers — hidden from model, only WE use these |
+
+### Code
+```python
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=0.2,      # 20% for testing
+    random_state=42     # same shuffle every time
+)
+
+print("Training samples:", len(X_train))
+print("Testing samples:", len(X_test))
+```
+
+> **`random_state=42`** — shuffles data the same way every run for reproducibility. Any number works, 42 is just convention.
+
+---
+
+## 4. Features (X) and Labels (y)
+
+```
+X = inputs  → everything EXCEPT the answer column
+y = output  → the answer we are trying to predict
+```
+
+```python
+# X = features (input) — what the model learns FROM
+X = df[['Pclass', 'Sex', 'Age', 'Fare']]
+
+# y = label (output) — what the model learns TO predict
+y = df['Survived']
+
+print("Features shape:", X.shape)
+print("Labels shape:", y.shape)
+```
+
+---
+
+## 5. Decision Tree Classifier
+
+### How it works
+Works like a 20 questions game — asks a series of yes/no questions to reach a conclusion:
+
+```
+Is Sex == female?
+    ├── Yes → Is Pclass == 1?
+    │           ├── Yes → SURVIVED ✅
+    │           └── No  → Did NOT survive ❌
+    └── No  → Is Age < 10?
+                ├── Yes → SURVIVED ✅
+                └── No  → Did NOT survive ❌
+```
+
+The model learns WHICH questions to ask and in WHAT order — purely from training data.
+
+### Code
+```python
+from sklearn.tree import DecisionTreeClassifier
+
+model = DecisionTreeClassifier(random_state=42)
+model.fit(X_train, y_train)  # learning happens here
+print("✅ Model trained!")
+```
+
+---
+
+## 6. Complete Titanic ML Model
+
+```python
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score
+
+# Step 1 — Load
+url = "https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv"
+df = pd.read_csv(url)
+
+# Step 2 — Clean & Prepare
+df = df[['Survived', 'Pclass', 'Sex', 'Age', 'Fare']]
+df['Age'] = df['Age'].fillna(df['Age'].median())
+df['Fare'] = df['Fare'].fillna(df['Fare'].median())
+df['Sex'] = df['Sex'].map({'male': 0, 'female': 1})  # encoding
+
+# Step 3 — Split features and labels
+X = df[['Pclass', 'Sex', 'Age', 'Fare']]
+y = df['Survived']
+
+# Step 4 — Train/Test split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Step 5 — Train
+model = DecisionTreeClassifier(random_state=42)
+model.fit(X_train, y_train)
+
+# Step 6 — Evaluate
+y_pred = model.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Model Accuracy: {accuracy * 100:.2f}%")
+
+# Step 7 — Predict new passengers
+new_passengers = pd.DataFrame([
+    [1, 1, 25, 500],   # 1st class, female, age 25, fare 500
+    [3, 0, 40, 10],    # 3rd class, male, age 40, fare 10
+    [2, 1, 8,  50],    # 2nd class, female, age 8, fare 50
+], columns=['Pclass', 'Sex', 'Age', 'Fare'])
+
+predictions = model.predict(new_passengers)
+for i, pred in enumerate(predictions):
+    print(f"Passenger {i+1}: {'Survived ✅' if pred == 1 else 'Did not survive ❌'}")
+```
+
+---
+
+## 7. Model Evaluation
+
+### The 3-line Evaluation Template
+```python
+# Always the same 3 lines for any model
+y_pred = model.predict(X_test)                 # Step 1 — predict
+accuracy = accuracy_score(y_test, y_pred)      # Step 2 — measure
+print(f"Accuracy: {accuracy * 100:.2f}%")      # Step 3 — print
+```
+
+### What accuracy means
+```python
+# Manually understanding accuracy
+correct = 0
+total = len(y_test)
+
+for real, predicted in zip(y_test, y_pred):
+    if real == predicted:
+        correct += 1
+
+manual_accuracy = correct / total
+# Same result as accuracy_score()
+```
+
+> **Accuracy = correct predictions / total predictions**
+
+---
+
+## 8. Encoding — Converting Categories to Numbers
+
+ML models only understand numbers. Text must be converted.
+
+```python
+# Method 1 — map() for binary categories
+df['Sex'] = df['Sex'].map({'male': 0, 'female': 1})
+
+# Method 2 — apply() with lambda for custom logic
+df['Class_type'] = df['Pclass'].apply(
+    lambda x: 'High' if x == 1 else 'Low'
+)
+```
+
+> **Rule:** Everything going into an ML model must be a number.
+
+---
+
+## 9. Feature Importance — EDA
+
+Always explore your data BEFORE building a model.
+
+```python
+# Survival rate by Sex
+print(df.groupby('Sex')['Survived'].mean())
+# male   → 0.19 (19% survived)
+# female → 0.74 (74% survived)
+
+# Survival rate by Pclass
+print(df.groupby('Pclass')['Survived'].mean())
+# 1st class → 0.63
+# 2nd class → 0.47
+# 3rd class → 0.24
+
+# Survival rate by Age group
+df['AgeGroup'] = pd.cut(df['Age'], bins=[0,12,18,60,100],
+                         labels=['Child','Teen','Adult','Senior'])
+print(df.groupby('AgeGroup')['Survived'].mean())
+```
+
+**Titanic findings:**
+- **Sex** — most important feature (74% females vs 19% males survived)
+- **Pclass** — second most important (rich = closer to lifeboats)
+- **Age** — children prioritized
+
+> **Rule:** Data always tells a story. Read it before modeling.
+
+---
+
+## 10. How to Improve a Model
+
+The 3 answers for any "improve your model" interview question:
+
+```
+1. Better features     → add more relevant columns
+2. Better algorithm    → try Random Forest, XGBoost instead of Decision Tree
+3. More/better data    → garbage in = garbage out
+```
+
+---
+
+## 11. Common Errors & Fixes
+
+### KeyError — Column not found
+```python
+# ❌ WRONG — Fare dropped on line 1, accessed on line 2
+df = df[['Survived', 'Pclass', 'Sex', 'Age']]  # Fare dropped here
+X = df[['Pclass', 'Sex', 'Age', 'Fare']]        # KeyError!
+
+# ✅ FIX — include all columns you need upfront
+df = df[['Survived', 'Pclass', 'Sex', 'Age', 'Fare']]  # keep Fare
+X = df[['Pclass', 'Sex', 'Age', 'Fare']]                # works!
+```
+
+### ValueError — Feature mismatch during prediction
+```python
+# ❌ WRONG — trained with 4 features, predicting with 3
+model.fit(X_train, y_train)  # trained on Pclass, Sex, Age, Fare
+new = pd.DataFrame([[1, 1, 25]], columns=['Pclass', 'Sex', 'Age'])
+model.predict(new)  # ValueError — Fare is missing!
+
+# ✅ FIX — prediction must have exact same columns as training
+new = pd.DataFrame([[1, 1, 25, 500]], columns=['Pclass', 'Sex', 'Age', 'Fare'])
+model.predict(new)  # works!
+```
+
+### Jupyter Memory Error
+```python
+# Problem — old variables stay in memory even after deleting cells
+# Fix — always reload data at top of cell
+
+url = "https://raw.githubusercontent.com/..."
+df = pd.read_csv(url)  # ← always reload fresh
+
+# OR go to: Kernel → Restart & Run All
+```
+
+> **Golden Rule:** Weird error that doesn't match your code?
+> **Restart Kernel and Run All.** Fixes 90% of Jupyter issues.
+
+---
+
+## 12. sklearn Column Matching Rule
+
+```
+Named DataFrame → sklearn matches columns by NAME (order doesn't matter)
+Numpy array     → order must match training exactly
+
+Best practice → always use named DataFrames for safety
+```
+
+---
+
+## Key Concepts to Remember
+
+```python
+# The 3 lines you write in EVERY ML project
+model.fit(X_train, y_train)        # train
+y_pred = model.predict(X_test)     # predict
+accuracy_score(y_test, y_pred)     # evaluate
+```
+
+```
+Overfitting  = model memorizes training data, fails on new data
+Fix          = always use separate train and test sets
+```
+
+```
+X = features = inputs  (all columns except answer)
+y = labels   = outputs (the answer column)
+```
+
+---
+
+## Interview Tips — Day 3
+
+**Q: What is overfitting and how do you prevent it?**
+> *"Overfitting is when a model memorizes training data instead of learning patterns.
+> It scores high on training data but poorly on new data.
+> Prevention: always split data into separate train and test sets,
+> use cross-validation, or simplify the model."*
+
+**Q: Walk me through building an ML model from scratch.**
+> 1. Load and explore the data
+> 2. Clean and prepare — handle missing values, encode categories
+> 3. Split into train and test sets
+> 4. Train the model with `model.fit(X_train, y_train)`
+> 5. Evaluate with `accuracy_score(y_test, y_pred)`
+
+**Q: How would you improve a model with 75% accuracy?**
+> 1. Add more relevant features
+> 2. Try a better algorithm (Random Forest, XGBoost)
+> 3. Get more/better quality training data
+> 4. Question if higher accuracy is even realistic for this dataset
+
+---
