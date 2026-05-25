@@ -1,0 +1,486 @@
+# Day 5 — Regression & Evaluation Metrics 📈
+
+Regression is used when we need to predict numerical values instead of categories. In classification, we predict outputs like Yes/No, Spam/Not Spam, Positive/Negative etc. But in regression, we predict continuous values such as house price, temperature, salary, sales revenue, stock prices and more.
+
+Examples:
+
+- House Price → ₹45,00,000
+- Temperature → 32°C
+- Sales Next Month → ₹8,40,000
+
+Classification predicts categories while Regression predicts numbers.
+
+Classification Example:
+- Spam / Not Spam
+- Disease / No Disease
+
+Regression Example:
+- Salary Prediction
+- Price Prediction
+
+--------------------------------------------------
+
+# 🔥 Linear Regression
+
+Linear Regression is the simplest and most important regression algorithm. It finds the best straight line through data points.
+
+Formula:
+
+y = mx + c
+
+Where:
+- y = predicted value
+- x = input feature
+- m = slope
+- c = intercept
+
+Example:
+Study Hours vs Exam Score
+
+More study hours generally lead to higher marks.
+
+| Study Hours | Score |
+|-------------|-------|
+| 1           | 35    |
+| 2           | 42    |
+| 3           | 57    |
+| 4           | 61    |
+| 5           | 72    |
+
+Linear Regression learns this relationship and predicts future values.
+
+--------------------------------------------------
+
+# ✅ Linear Regression Code
+
+```python
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+
+# Dataset
+data = {
+    'Study_Hours': [1,2,3,4,5,6,7,8,9,10],
+    'Score': [35,42,57,61,72,78,85,88,92,97]
+}
+
+df = pd.DataFrame(data)
+
+# Features and labels
+X = df[['Study_Hours']]
+y = df['Score']
+
+# Split dataset
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Train model
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# Predictions
+y_pred = model.predict(X_test)
+
+# Equation
+print("Slope:", model.coef_[0])
+print("Intercept:", model.intercept_)
+
+# Predict new value
+prediction = model.predict([[5.5]])
+print("Predicted Score:", prediction[0])
+
+# Visualization
+plt.scatter(df['Study_Hours'], df['Score'])
+
+plt.plot(
+    df['Study_Hours'],
+    model.predict(df[['Study_Hours']])
+)
+
+plt.xlabel("Study Hours")
+plt.ylabel("Score")
+plt.title("Linear Regression")
+
+plt.show()
+````
+
+---
+
+# 🔥 Multiple Linear Regression
+
+Multiple Linear Regression uses multiple features to predict one output.
+
+Formula:
+
+Price = m1x1 + m2x2 + m3x3 + c
+
+Example:
+
+House Price depends on:
+
+* Size
+* Bedrooms
+* Age
+* Location
+
+Instead of using one feature, the model uses all features together.
+
+---
+
+# ✅ Multiple Linear Regression Code
+
+```python
+import pandas as pd
+
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+
+# Dataset
+data = {
+    'Size_sqft': [800,1200,1500,1800,2000],
+    'Bedrooms': [1,2,2,3,3],
+    'Age_years': [5,3,8,2,10],
+    'Price_lakhs': [45,72,85,110,120]
+}
+
+df = pd.DataFrame(data)
+
+# Features and labels
+X = df[['Size_sqft', 'Bedrooms', 'Age_years']]
+y = df['Price_lakhs']
+
+# Split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Train
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# Predict
+new_flat = [[1400, 2, 4]]
+
+prediction = model.predict(new_flat)
+
+print("Predicted Price:", prediction[0])
+```
+
+---
+
+# 🔥 Regression Evaluation Metrics
+
+Classification uses Accuracy, Precision and Recall.
+
+Regression uses:
+
+* MAE
+* MSE
+* RMSE
+* R² Score
+
+---
+
+# 1️⃣ MAE — Mean Absolute Error
+
+MAE measures average absolute error.
+
+Formula:
+
+MAE = average(|actual - predicted|)
+
+Example:
+
+Actual:    [100, 200, 300]
+Predicted: [110, 185, 320]
+
+Errors:
+[10, 15, 20]
+
+MAE = (10 + 15 + 20) / 3 = 15
+
+Meaning:
+On average, predictions are 15 units away from actual values.
+
+---
+
+# 2️⃣ MSE — Mean Squared Error
+
+MSE squares the errors before averaging.
+
+Formula:
+
+MSE = average((actual - predicted)^2)
+
+Large errors get punished heavily.
+
+Example:
+
+Errors:
+[10, 15, 20]
+
+Squared Errors:
+[100, 225, 400]
+
+MSE = (100 + 225 + 400) / 3
+
+---
+
+# 3️⃣ RMSE — Root Mean Squared Error
+
+RMSE is the square root of MSE.
+
+Formula:
+
+RMSE = √MSE
+
+It brings the value back to the original unit.
+
+Most commonly used regression metric.
+
+---
+
+# 4️⃣ R² Score
+
+R² tells how good the model is.
+
+Values:
+
+* R² = 1 → Perfect model
+* R² = 0 → Very poor model
+* R² = 0.85 → Model explains 85% variation
+
+---
+
+# ✅ Metrics Code
+
+```python
+import numpy as np
+
+from sklearn.metrics import (
+    mean_absolute_error,
+    mean_squared_error,
+    r2_score
+)
+
+mae = mean_absolute_error(y_test, y_pred)
+
+mse = mean_squared_error(y_test, y_pred)
+
+rmse = np.sqrt(mse)
+
+r2 = r2_score(y_test, y_pred)
+
+print("MAE :", mae)
+print("MSE :", mse)
+print("RMSE:", rmse)
+print("R2  :", r2)
+```
+
+---
+
+# 🔥 Polynomial Regression
+
+Linear Regression creates only straight lines.
+
+But many real-world relationships are curved.
+
+Polynomial Regression handles curved data.
+
+Formulas:
+
+y = ax² + bx + c
+
+or
+
+y = ax³ + bx² + cx + d
+
+---
+
+# ✅ Polynomial Regression Code
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+
+# Dataset
+years = np.array([1,2,3,4,5,6,7,8,9,10]).reshape(-1,1)
+
+growth = np.array([2,5,10,17,26,37,50,65,82,101])
+
+# Model
+poly_model = Pipeline([
+    ('poly', PolynomialFeatures(degree=2)),
+    ('linear', LinearRegression())
+])
+
+# Train
+poly_model.fit(years, growth)
+
+# Predict
+y_pred = poly_model.predict(years)
+
+# Plot
+plt.scatter(years, growth)
+
+plt.plot(years, y_pred)
+
+plt.xlabel("Years")
+plt.ylabel("Growth")
+
+plt.title("Polynomial Regression")
+
+plt.show()
+
+# Future prediction
+prediction = poly_model.predict([[11]])
+
+print("Year 11 Prediction:", prediction[0])
+```
+
+---
+
+# 🔥 Complete House Price Predictor Project
+
+Features:
+
+* Size_sqft
+* Bedrooms
+* Age_years
+* Location
+
+Target:
+
+* Price_lakhs
+
+---
+
+# ✅ Complete Project Code
+
+```python
+import pandas as pd
+import numpy as np
+
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+from sklearn.metrics import (
+    mean_absolute_error,
+    mean_squared_error,
+    r2_score
+)
+
+# Dataset
+data = {
+    'Size_sqft': [800,1200,1500,1800,2000,2500],
+    'Bedrooms': [1,2,2,3,3,4],
+    'Age_years': [5,3,8,2,10,1],
+    'Location': [1,2,1,3,2,3],
+    'Price_lakhs': [45,72,85,110,120,165]
+}
+
+df = pd.DataFrame(data)
+
+# Features and labels
+X = df[['Size_sqft', 'Bedrooms', 'Age_years', 'Location']]
+
+y = df['Price_lakhs']
+
+# Split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Scaling
+scaler = StandardScaler()
+
+X_train_scaled = scaler.fit_transform(X_train)
+
+X_test_scaled = scaler.transform(X_test)
+
+# Train
+model = LinearRegression()
+
+model.fit(X_train_scaled, y_train)
+
+# Predict
+y_pred = model.predict(X_test_scaled)
+
+# Metrics
+mae = mean_absolute_error(y_test, y_pred)
+
+rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+
+r2 = r2_score(y_test, y_pred)
+
+print("MAE :", mae)
+print("RMSE:", rmse)
+print("R2  :", r2)
+
+# New prediction
+new_flat = pd.DataFrame(
+    [[1500, 2, 4, 2]],
+    columns=['Size_sqft','Bedrooms','Age_years','Location']
+)
+
+new_flat_scaled = scaler.transform(new_flat)
+
+price = model.predict(new_flat_scaled)
+
+print("Predicted Price:", price[0])
+```
+
+---
+
+# 🔥 Why StandardScaler?
+
+Different features have different ranges.
+
+Example:
+
+* Size_sqft → 800 to 3000
+* Bedrooms → 1 to 4
+
+Without scaling, large-number features dominate the model.
+
+StandardScaler converts all features into similar scale.
+
+```python
+scaler.fit_transform(X_train)
+
+scaler.transform(X_test)
+```
+
+Important:
+
+* fit_transform() on training data
+* transform() only on test data
+
+Never use fit_transform() on test data.
+
+---
+
+# ✅ Final Summary
+
+| Topic                 | Meaning                  |
+| --------------------- | ------------------------ |
+| Regression            | Predict numbers          |
+| Linear Regression     | Straight-line prediction |
+| Multiple Regression   | Multiple input features  |
+| MAE                   | Average error            |
+| MSE                   | Punishes large errors    |
+| RMSE                  | Most practical metric    |
+| R² Score              | Model quality            |
+| Polynomial Regression | Handles curves           |
+| StandardScaler        | Balances feature scales  |
+
+# 🚀 End of Day 5
+
