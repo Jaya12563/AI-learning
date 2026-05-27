@@ -1,0 +1,626 @@
+# Day 6 — Data Preprocessing & Feature Engineering 🔧
+
+80% of a data scientist's work is cleaning and preparing data. Even the best machine learning algorithm performs badly on messy data. Clean data + simple algorithm usually beats dirty data + advanced algorithm.
+
+Real-world data always contains problems such as:
+- Missing values
+- Wrong formatting
+- Outliers
+- Incorrect data types
+- Inconsistent categories
+
+Example:
+
+| Name   | Age | City       | Salary | Joined |
+|--------|-----|------------|--------|---------|
+| Rahul  | 25  | Hyderabad  | 50000  | 2021-03-15 |
+| Priya  | NaN | mumbai     | 999999 | 2019-07-22 |
+| Kiran  | 19  | BANGALORE  | 45000  | NaN |
+| Ananya | 200 | Chennai    | 62000  | 2020-11-08 |
+| Ravi   | 28  | hyderabad  | 58000  | 2022-01-30 |
+
+Problems:
+- Missing values (NaN)
+- Inconsistent text formatting
+- Outliers like age=200
+- Wrong salary values
+- Missing dates
+
+Data preprocessing means fixing all these problems before training the model.
+
+--------------------------------------------------
+
+# 🔥 Handling Missing Values
+
+Missing values are one of the most common problems in datasets.
+
+Different strategies are used based on the situation.
+
+--------------------------------------------------
+
+# ✅ Missing Value Handling Code
+
+```python
+import pandas as pd
+import numpy as np
+
+data = {
+    'Name': ['Rahul', 'Priya', 'Kiran', 'Ananya', 'Ravi', 'Sara', 'Amit'],
+    'Age': [25, np.nan, 19, 45, np.nan, 32, 28],
+    'City': ['Hyderabad', 'Mumbai', np.nan, 'Chennai', 'Hyderabad', np.nan, 'Mumbai'],
+    'Salary': [50000, 80000, 45000, np.nan, 58000, 72000, np.nan],
+    'Score': [85, 90, np.nan, 78, 88, np.nan, 92]
+}
+
+df = pd.DataFrame(data)
+
+# Check missing values
+print(df.isnull().sum())
+
+# Percentage of missing values
+print(df.isnull().mean() * 100)
+
+# Mean fill
+df['Age'] = df['Age'].fillna(df['Age'].mean())
+
+# Median fill
+df['Salary'] = df['Salary'].fillna(df['Salary'].median())
+
+# Mode fill
+df['City'] = df['City'].fillna(df['City'].mode()[0])
+
+# Forward fill
+df['Score'] = df['Score'].fillna(method='ffill')
+
+print(df)
+````
+
+---
+
+# 📌 When to Use Which Method
+
+| Method       | Use Case                        |
+| ------------ | ------------------------------- |
+| Mean Fill    | Numerical data without outliers |
+| Median Fill  | Numerical data with outliers    |
+| Mode Fill    | Categorical columns             |
+| Forward Fill | Time series data                |
+| Drop Rows    | Very few missing rows           |
+| Drop Column  | More than 50% values missing    |
+
+---
+
+# 🔥 Encoding Categorical Variables
+
+Machine learning models understand only numbers.
+
+Text categories must be converted into numerical form.
+
+There are two types of categorical data:
+
+1. Ordinal Data → has order
+   Example:
+
+* High School
+* Bachelor
+* Master
+* PhD
+
+2. Nominal Data → no order
+   Example:
+
+* Hyderabad
+* Mumbai
+* Chennai
+
+---
+
+# ✅ Label Encoding
+
+Used for ordinal data.
+
+```python
+from sklearn.preprocessing import LabelEncoder
+import pandas as pd
+
+data = {
+    'Education': [
+        'High School',
+        'Bachelor',
+        'Master',
+        'PhD',
+        'Bachelor'
+    ]
+}
+
+df = pd.DataFrame(data)
+
+le = LabelEncoder()
+
+df['Education_encoded'] = le.fit_transform(df['Education'])
+
+print(df)
+```
+
+---
+
+# ✅ One Hot Encoding
+
+Used for nominal data.
+
+```python
+import pandas as pd
+
+data = {
+    'City': [
+        'Hyderabad',
+        'Mumbai',
+        'Chennai',
+        'Hyderabad',
+        'Mumbai'
+    ]
+}
+
+df = pd.DataFrame(data)
+
+df_encoded = pd.get_dummies(df, columns=['City'])
+
+print(df_encoded)
+```
+
+---
+
+# ✅ Binary Encoding Using map()
+
+```python
+df['Gender'] = df['Gender'].map({
+    'Male': 0,
+    'Female': 1
+})
+
+df['Survived'] = df['Survived'].map({
+    'Yes': 1,
+    'No': 0
+})
+```
+
+---
+
+# 📌 Encoding Summary
+
+| Data Type          | Method           |
+| ------------------ | ---------------- |
+| Binary Categories  | map()            |
+| Ordinal Categories | LabelEncoder     |
+| Nominal Categories | One Hot Encoding |
+
+---
+
+# 🔥 Feature Scaling
+
+Feature scaling brings all features into similar range.
+
+Example:
+
+* Salary → 50000
+* Age → 25
+
+Without scaling, larger values dominate the model.
+
+Two popular scaling methods:
+
+* StandardScaler
+* MinMaxScaler
+
+---
+
+# ✅ StandardScaler vs MinMaxScaler
+
+```python
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+import numpy as np
+
+data = np.array([[1000], [2000], [3000], [4000], [5000]])
+
+# StandardScaler
+ss = StandardScaler()
+
+print(ss.fit_transform(data))
+
+# MinMaxScaler
+mms = MinMaxScaler()
+
+print(mms.fit_transform(data))
+```
+
+---
+
+# 📌 Difference Between Both
+
+| Scaler         | Description                 |
+| -------------- | --------------------------- |
+| StandardScaler | Mean=0 and Std=1            |
+| MinMaxScaler   | Scales data between 0 and 1 |
+
+---
+
+# 📌 When to Use Which
+
+| Method         | Best Use                             |
+| -------------- | ------------------------------------ |
+| StandardScaler | Regression, Logistic Regression, SVM |
+| MinMaxScaler   | Neural Networks                      |
+
+---
+
+# 🔥 Outlier Detection and Removal
+
+Outliers are extreme values that do not follow normal pattern.
+
+Example:
+
+Ages:
+[22, 25, 28, 24, 26, 200, 23]
+
+Here 200 is an outlier.
+
+Outliers can badly affect machine learning models.
+
+---
+
+# ✅ IQR Method
+
+Most commonly used outlier detection method.
+
+```python
+import pandas as pd
+
+data = {
+    'Salary': [
+        30000,
+        35000,
+        40000,
+        42000,
+        38000,
+        36000,
+        500000,
+        39000
+    ]
+}
+
+df = pd.DataFrame(data)
+
+Q1 = df['Salary'].quantile(0.25)
+
+Q3 = df['Salary'].quantile(0.75)
+
+IQR = Q3 - Q1
+
+lower = Q1 - 1.5 * IQR
+
+upper = Q3 + 1.5 * IQR
+
+print("Lower:", lower)
+print("Upper:", upper)
+
+outliers = df[
+    (df['Salary'] < lower) |
+    (df['Salary'] > upper)
+]
+
+print(outliers)
+
+# Remove outliers
+df_clean = df[
+    (df['Salary'] >= lower) &
+    (df['Salary'] <= upper)
+]
+
+print(df_clean)
+```
+
+---
+
+# ✅ Z-Score Method
+
+```python
+from scipy import stats
+import numpy as np
+
+salaries = [
+    30000,
+    35000,
+    40000,
+    42000,
+    38000,
+    36000,
+    500000
+]
+
+z_scores = np.abs(stats.zscore(salaries))
+
+print(z_scores)
+
+outlier_indices = np.where(z_scores > 3)[0]
+
+print(outlier_indices)
+```
+
+---
+
+# 📌 IQR vs Z-Score
+
+| Method  | Description                 |
+| ------- | --------------------------- |
+| IQR     | Works on any distribution   |
+| Z-Score | Assumes normal distribution |
+
+---
+
+# 🔥 Feature Engineering
+
+Feature Engineering means creating new useful features from existing data.
+
+Example:
+
+* Runs and Balls → Strike Rate
+* Salary and Expenses → Savings
+
+Good features improve model performance significantly.
+
+---
+
+# ✅ Mathematical Feature Engineering
+
+```python
+import pandas as pd
+
+data = {
+    'Name': ['Rahul', 'Priya', 'Kiran'],
+    'Salary': [50000, 80000, 45000],
+    'Expenses': [35000, 60000, 40000],
+    'Age': [25, 32, 22]
+}
+
+df = pd.DataFrame(data)
+
+df['Savings'] = df['Salary'] - df['Expenses']
+
+df['Savings_Rate'] = (
+    df['Savings'] / df['Salary']
+)
+
+print(df)
+```
+
+---
+
+# ✅ Date Feature Engineering
+
+```python
+import pandas as pd
+
+data = {
+    'Order_Date': [
+        '2024-01-15',
+        '2024-03-22',
+        '2024-07-08'
+    ]
+}
+
+df = pd.DataFrame(data)
+
+df['Order_Date'] = pd.to_datetime(df['Order_Date'])
+
+df['Year'] = df['Order_Date'].dt.year
+
+df['Month'] = df['Order_Date'].dt.month
+
+df['Day'] = df['Order_Date'].dt.day
+
+df['DayOfWeek'] = df['Order_Date'].dt.dayofweek
+
+df['Quarter'] = df['Order_Date'].dt.quarter
+
+print(df)
+```
+
+---
+
+# ✅ Interaction Features
+
+```python
+df['Size_x_Location'] = (
+    df['Size_sqft'] * df['Location']
+)
+```
+
+---
+
+# ✅ Binning
+
+```python
+import pandas as pd
+
+ages = [5, 15, 25, 35, 45, 55, 65]
+
+df = pd.DataFrame({'Age': ages})
+
+df['Age_Group'] = pd.cut(
+    df['Age'],
+    bins=[0, 12, 18, 35, 60, 100],
+    labels=[
+        'Child',
+        'Teen',
+        'Young Adult',
+        'Adult',
+        'Senior'
+    ]
+)
+
+print(df)
+```
+
+---
+
+# 🔥 Complete Data Preprocessing Pipeline
+
+```python
+import pandas as pd
+import numpy as np
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report
+
+# Raw Data
+data = {
+    'Age': [25, np.nan, 19, 200, 28, 32, np.nan, 35],
+    'City': [
+        'Hyderabad',
+        'Mumbai',
+        'bangalore',
+        'Chennai',
+        'hyderabad',
+        'Mumbai',
+        'Bangalore',
+        'Chennai'
+    ],
+    'Salary': [
+        50000,
+        80000,
+        45000,
+        999999,
+        58000,
+        72000,
+        48000,
+        65000
+    ],
+    'Education': [
+        'Bachelor',
+        'Master',
+        'High School',
+        'PhD',
+        'Bachelor',
+        'Master',
+        'Bachelor',
+        'PhD'
+    ],
+    'Purchased': [1,1,0,1,0,1,0,1]
+}
+
+df = pd.DataFrame(data)
+
+# Fix inconsistent text
+df['City'] = df['City'].str.title()
+
+# Handle outliers
+for col in ['Age', 'Salary']:
+
+    Q1 = df[col].quantile(0.25)
+
+    Q3 = df[col].quantile(0.75)
+
+    IQR = Q3 - Q1
+
+    lower = Q1 - 1.5 * IQR
+
+    upper = Q3 + 1.5 * IQR
+
+    df[col] = df[col].clip(lower, upper)
+
+# Handle missing values
+df['Age'] = df['Age'].fillna(df['Age'].median())
+
+df['Salary'] = df['Salary'].fillna(
+    df['Salary'].median()
+)
+
+# One Hot Encoding
+df = pd.get_dummies(df, columns=['City'])
+
+# Ordinal Encoding
+edu_order = {
+    'High School': 0,
+    'Bachelor': 1,
+    'Master': 2,
+    'PhD': 3
+}
+
+df['Education'] = df['Education'].map(
+    edu_order
+)
+
+# Features and labels
+X = df.drop('Purchased', axis=1)
+
+y = df['Purchased']
+
+# Train Test Split
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42
+)
+
+# Scaling
+scaler = StandardScaler()
+
+X_train_scaled = scaler.fit_transform(X_train)
+
+X_test_scaled = scaler.transform(X_test)
+
+# Train model
+model = RandomForestClassifier(
+    random_state=42
+)
+
+model.fit(X_train_scaled, y_train)
+
+# Prediction
+y_pred = model.predict(X_test_scaled)
+
+# Evaluation
+print(classification_report(
+    y_test,
+    y_pred
+))
+```
+
+---
+
+# 📋 Data Preprocessing Checklist
+
+✅ 1. df.head(), df.shape, df.dtypes
+→ Understand dataset
+
+✅ 2. df.isnull().sum()
+→ Find missing values
+
+✅ 3. Fix inconsistent text
+→ str.title(), lower(), upper()
+
+✅ 4. Detect outliers
+→ IQR or Z-score
+
+✅ 5. Handle missing values
+→ mean(), median(), mode()
+
+✅ 6. Encode categories
+→ map(), LabelEncoder, One Hot Encoding
+
+✅ 7. Scale features
+→ StandardScaler or MinMaxScaler
+
+✅ 8. Feature Engineering
+→ Create useful new features
+
+✅ 9. Train/Test Split
+→ Split dataset correctly
+
+✅ 10. fit_transform() only on train data
+→ transform() on test data
+
+
