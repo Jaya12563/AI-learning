@@ -1,0 +1,275 @@
+📄 Day 7 — GitHub File
+
+Day 7 — How Neural Networks Work + Mini Project 🧠
+Topics Covered
+
+What is a Neural Network
+Neurons — the building block
+Layers — Input, Hidden, Output
+Activation Functions — ReLU, Sigmoid, Tanh, Softmax
+Forward Pass
+Backpropagation + Gradient Descent
+Mini Project — Movie Review Sentiment Classifier
+
+
+1. What is a Neural Network?
+A system inspired by the human brain — connected nodes that process information and learn patterns from data.
+At its core:
+Numbers go in → math happens → numbers come out
+→ compare to correct answer → adjust weights → repeat
+Analogy — Company with Departments 🏢
+Customer complaint (INPUT)
+       ↓
+Receptionist — basic reading (Layer 1)
+       ↓
+Manager — deeper analysis (Layer 2)
+       ↓
+Director — final decision (Layer 3)
+       ↓
+Response sent (OUTPUT)
+Each layer understands at a DEEPER level than previous.
+
+2. Neurons — The Building Block
+A single neuron does 4 things:
+1. Receive inputs
+2. Multiply each by a weight, add bias
+3. Pass through activation function
+4. Send output to next layer
+Formula
+output = activation(w1×x1 + w2×x2 + ... + bias)
+
+x = inputs
+w = weights (what model LEARNS)
+bias = adjustment (also learned)
+activation = adds non-linearity
+Code
+pythonimport numpy as np
+
+def neuron(inputs, weights, bias):
+    weighted_sum = np.dot(inputs, weights) + bias
+    output = 1 / (1 + np.exp(-weighted_sum))  # sigmoid
+    return output
+
+inputs  = np.array([0.3, 0.7, 0.5])
+weights = np.array([0.4, 0.6, 0.3])
+bias    = -0.2
+
+result = neuron(inputs, weights, bias)
+print(f"Neuron output: {result:.4f}")
+
+3. Layers
+INPUT LAYER    → receives raw data, one neuron per feature
+HIDDEN LAYERS  → where learning happens, extracts patterns
+OUTPUT LAYER   → gives final answer
+Neurons per layer:
+Input layer  → one neuron per feature
+               3 features → 3 neurons
+               784 pixel image → 784 neurons
+
+Output layer → depends on problem type
+               Binary classification → 1 neuron
+               10 classes → 10 neurons
+               Regression → 1 neuron
+What is Deep Learning?
+1 hidden layer  → shallow network
+2+ hidden layers → DEEP network → Deep Learning!
+
+4. Activation Functions
+Why needed: Without them, entire network collapses into one linear equation — y=mx+c. No complex patterns possible.
+Activation functions ADD non-linearity.
+ReLU — Most Popular for Hidden Layers
+pythondef relu(x):
+    return np.maximum(0, x)
+
+# x < 0 → output = 0 (neuron off)
+# x > 0 → output = x (neuron on)
+# Fast, simple, solves vanishing gradient
+Sigmoid — Binary Output Layer
+pythondef sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+# Output always between 0 and 1
+# Perfect for binary classification probability
+# Problem: vanishing gradient in hidden layers
+Tanh — Hidden Layers (zero-centered)
+pythondef tanh(x):
+    return np.tanh(x)
+
+# Output between -1 and 1
+# Zero-centered = better than sigmoid for hidden layers
+Softmax — Multi-class Output Layer
+pythondef softmax(x):
+    return np.exp(x) / np.sum(np.exp(x))
+
+scores = np.array([2.0, 1.0, 0.5])
+probs  = softmax(scores)
+# [0.659, 0.242, 0.099] — sums to 1.0
+# Use when predicting one of many classes
+Quick Reference
+Activation  Where              Output Range
+────────────────────────────────────────────
+ReLU        Hidden layers      [0, ∞)
+Sigmoid     Binary output      (0, 1)
+Tanh        Hidden layers      (-1, 1)
+Softmax     Multi-class output (0,1) sums to 1
+
+5. Forward Pass
+Data flowing from input → output through all layers.
+pythonimport numpy as np
+
+X  = np.array([0.3, 0.7])
+
+W1 = np.array([[0.4, 0.2, 0.6],
+               [0.3, 0.5, 0.1]])
+b1 = np.array([0.1, 0.2, 0.1])
+
+W2 = np.array([[0.5], [0.3], [0.7]])
+b2 = np.array([0.1])
+
+# Layer 1 — Input to Hidden
+z1 = np.dot(X, W1) + b1
+a1 = np.maximum(0, z1)          # ReLU
+
+# Layer 2 — Hidden to Output
+z2 = np.dot(a1, W2) + b2
+a2 = 1 / (1 + np.exp(-z2))      # Sigmoid
+
+print(f"Prediction: {a2[0]:.4f}")
+
+6. Backpropagation + Gradient Descent
+The 4-Step Learning Loop
+1. FORWARD PASS   → make prediction
+2. CALCULATE LOSS → how wrong was prediction?
+3. BACKPROP       → how much did each weight cause the error?
+4. UPDATE WEIGHTS → adjust weights to reduce error
+   weights = weights - learning_rate × gradient
+
+Repeat for all examples → model improves!
+Analogy — Learning to Throw a Ball 🏏
+Throw → miss target        (forward pass → loss)
+Coach says "too far left"  (backpropagation)
+Adjust angle right         (weight update)
+Throw again → closer       (next epoch)
+Repeat → always hits       (model converges)
+Key Terms
+python# Loss Function — how wrong is the prediction?
+loss = -(actual * np.log(predicted) +
+         (1-actual) * np.log(1-predicted))
+
+# Learning Rate — size of each weight update step
+# Too high → overshoots, never converges
+# Too low  → learns too slowly
+# Typical: 0.001, 0.01, 0.0001
+
+# Epoch — one complete pass through ALL training data
+# More epochs = more learning (but risk overfitting)
+
+7. Mini Project — Movie Review Sentiment Classifier
+pythonimport numpy as np
+from sklearn.neural_network import MLPClassifier
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, classification_report
+
+reviews = [
+    "This movie was absolutely fantastic and amazing",
+    "Brilliant performance by all actors loved it",
+    "One of the best films I have ever seen",
+    "Great story wonderful direction highly recommend",
+    "Loved every minute of this masterpiece",
+    "Incredible visuals and outstanding screenplay",
+    "A must watch film truly entertaining",
+    "Superb acting and gripping storyline throughout",
+    "This was a terrible waste of time",
+    "Worst movie I have ever seen in my life",
+    "Boring and predictable complete disappointment",
+    "Bad acting poor story avoid this film",
+    "Absolutely dreadful could not sit through it",
+    "Horrible screenplay and terrible direction",
+    "Complete waste of money very disappointing",
+    "Dull and uninteresting would not recommend",
+    "Pathetic attempt at filmmaking very poor",
+    "Dreadful performances and weak plot overall"
+]
+
+labels = [1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0]
+
+# Convert text to numbers
+vectorizer = TfidfVectorizer()
+X = vectorizer.fit_transform(reviews).toarray()
+y = np.array(labels)
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Neural Network
+model = MLPClassifier(
+    hidden_layer_sizes=(10, 5),  # 2 hidden layers
+    activation='relu',
+    max_iter=500,
+    random_state=42
+)
+
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+print(f"Accuracy: {accuracy_score(y_test, y_pred)*100:.2f}%")
+print(classification_report(y_test, y_pred,
+      target_names=['Negative','Positive']))
+
+# Predict new reviews
+new_reviews = [
+    "This film was absolutely wonderful and beautiful",
+    "Terrible movie boring and waste of time"
+]
+new_X = vectorizer.transform(new_reviews).toarray()
+predictions = model.predict(new_X)
+probabilities = model.predict_proba(new_X)
+
+for review, pred, prob in zip(new_reviews, predictions, probabilities):
+    sentiment  = "Positive 😊" if pred == 1 else "Negative 😞"
+    confidence = max(prob) * 100
+    print(f"\nReview: {review}")
+    print(f"Sentiment: {sentiment} ({confidence:.1f}% confident)")
+What happened:
+Text reviews
+     ↓
+TF-IDF → converts words to numbers
+     ↓
+Input Layer → one neuron per word in vocabulary
+     ↓
+Hidden Layer 1 (10 neurons, ReLU) → word patterns
+     ↓
+Hidden Layer 2 (5 neurons, ReLU)  → combined patterns
+     ↓
+Output Layer (1 neuron, Sigmoid)  → positive or negative
+
+Key Concepts to Remember
+Neuron     = weighted sum + bias + activation function
+Layers     = Input → Hidden → Output
+Deep Learning = 2+ hidden layers
+
+Activation functions ADD non-linearity
+Without them → network = one straight line
+With them    → network can learn ANY pattern
+
+Forward pass  = input → output → prediction
+Backprop      = output → input → weight updates
+Gradient Descent = weights = weights - lr × gradient
+
+ReLU    → hidden layers
+Sigmoid → binary output
+Softmax → multi-class output
+
+Interview Tips — Day 7
+Q: How does a neural network learn?
+
+"Through forward pass and backpropagation. Data flows forward through layers making a prediction. The loss function measures how wrong that prediction was. Backpropagation calculates each weight's contribution to the error. Gradient descent then adjusts all weights to reduce error. This repeats thousands of times until the model converges."
+
+Q: Why do we need activation functions?
+
+"Activation functions add non-linearity to the network. Without them, no matter how many layers you stack, the network collapses into a single linear equation. Non-linearity allows the network to learn complex patterns like images, speech and sentiment — things a straight line could never capture."
+
+Q: What is the difference between an epoch and a forward pass?
+
+"A forward pass is one prediction for one data point. An epoch is one complete pass through the entire training dataset — meaning all forward passes + backpropagation for every training example. Training for 100 epochs means the model saw every training example 100 times."
